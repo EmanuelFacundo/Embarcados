@@ -1,8 +1,11 @@
-#include <stdio.h>
+#include "consoleUtils.h"
 
-int main(){
-
-	printf("Hello word\n");
+int main()
+{
+	
+	ConsoleUtilsPrintf("hello word\n");
 
 	return 0;
 }
+
+
