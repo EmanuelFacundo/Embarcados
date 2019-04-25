@@ -79,14 +79,12 @@ int _main(){
 	/* Apagar o LED. */
 	//HWREG(SOC_GPIO_1_REGS + GPIO_CLEARDATAOUT) |= (1<<GPIO1_INSTANCE_PIN_NUMBER);
 
-
-
 	return 0;
 } /* ----------  end of function main  ---------- */
 
 /* 
  * ===  FUNCTION  ======================================================================
- *         Name:  delay
+ *         Name:  toggle
  *  Description:  
  * =====================================================================================
  */
@@ -139,6 +137,14 @@ static void toggle(unsigned int PIN){
 		}
 	}
 }
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  delay
+ *  Description:  
+ * =====================================================================================
+ */
+
 static void delay(unsigned int TIME){
 	volatile unsigned int ra;
 	for(ra = 0; ra < TIME; ra ++);

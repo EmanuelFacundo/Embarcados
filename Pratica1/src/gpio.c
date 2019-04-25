@@ -22,9 +22,22 @@
 **                INTERNAL FUNCTIONS
 *****************************************************************************/
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  GPIO1ModuleClkConfig
+ *  Description:  
+ * =====================================================================================
+ */
 static void GPIO1ModuleClkConfig(){
 	HWREG(SOC_PRCM_REGS + CM_PER_GPIO1_CLKCTRL) = (ENABLE_CM_PER_GPIO1_CLKCTRL<<0) | (1<<OPTFCLKEN_GPIO_1_GDBCLK);
 }
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  GPIO1PinMuxSetup
+ *  Description:  
+ * =====================================================================================
+ */
 
 static void GPIO1PinMuxSetup(unsigned int PIN){
 	switch(PIN){
@@ -50,10 +63,24 @@ static void GPIO1PinMuxSetup(unsigned int PIN){
 
 }
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  GPIODirModeSet
+ *  Description:  
+ * =====================================================================================
+ */
+
 static void GPIODirModeSet(unsigned int PIN){
 	if(PIN > -1 && PIN < 32)
 		HWREG(SOC_GPIO_1_REGS + GPIO_OE_OFFSET) &= ~(1<<PIN);
 }
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  GPIOWriteMode
+ *  Description:  
+ * =====================================================================================
+ */
 
 static void GPIOWriteMode(unsigned int PIN, unsigned int OUTPUT){
 

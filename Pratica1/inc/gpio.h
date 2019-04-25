@@ -9,8 +9,6 @@ static void GPIO1PinMuxSetup(unsigned int PIN);
 
 static void GPIODirModeSet(unsigned int PIN);
 
-static void GPIO1PinMuxSetup(unsigned int PIN);
-
 static void GPIOWriteMode(unsigned int PIN, unsigned int OUTPUT);
 
 
