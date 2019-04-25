@@ -1,7 +1,7 @@
 /*
  * =====================================================================================
  *
- *       Filename:  main.c
+ *       Filename:  LEDBlink.c
  *
  *    Description:  
  *
@@ -89,7 +89,7 @@ int _main(){
  * =====================================================================================
  */
 
-static void toggle(unsigned int PIN){
+void toggle(unsigned int PIN){
 	flag ^= TOGGLE;
 
 	if (flag){
@@ -145,7 +145,7 @@ static void toggle(unsigned int PIN){
  * =====================================================================================
  */
 
-static void delay(unsigned int TIME){
+void delay(unsigned int TIME){
 	volatile unsigned int ra;
 	for(ra = 0; ra < TIME; ra ++);
 }

@@ -3,13 +3,13 @@
 
 
 
-static void GPIO1ModuleClkConfig();
+void GPIO1ModuleClkConfig();
 
-static void GPIO1PinMuxSetup(unsigned int PIN);
+void GPIO1PinMuxSetup(unsigned int PIN);
 
-static void GPIODirModeSet(unsigned int PIN);
+void GPIODirModeSet(unsigned int PIN);
 
-static void GPIOWriteMode(unsigned int PIN, unsigned int OUTPUT);
+void GPIOWriteMode(unsigned int PIN, unsigned int OUTPUT);
 
 
 

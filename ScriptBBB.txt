@@ -1,2 +1,2 @@
-setenv app "setenv ipaddr 192.168.0.2; setenv serverip 192.168.0.1;tftp 0x80000000 /tftpboot/appGpio.bin; go 0x80000000;"
+setenv app "setenv ipaddr 192.168.0.2; setenv serverip 192.168.0.1;tftp 0x80000000 /tftpboot/LEDBlink.bin; go 0x80000000;"
 Agora da o run app na placa ai ze ruela.

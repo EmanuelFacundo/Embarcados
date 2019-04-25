@@ -28,7 +28,7 @@
  *  Description:  
  * =====================================================================================
  */
-static void GPIO1ModuleClkConfig(){
+void GPIO1ModuleClkConfig(){
 	HWREG(SOC_PRCM_REGS + CM_PER_GPIO1_CLKCTRL) = (ENABLE_CM_PER_GPIO1_CLKCTRL<<0) | (1<<OPTFCLKEN_GPIO_1_GDBCLK);
 }
 
@@ -39,7 +39,7 @@ static void GPIO1ModuleClkConfig(){
  * =====================================================================================
  */
 
-static void GPIO1PinMuxSetup(unsigned int PIN){
+void GPIO1PinMuxSetup(unsigned int PIN){
 	switch(PIN){
 		case GPIO1_INSTANCE_PIN_21:
 			HWREG(GPIO_INSTANCE_ADDRESS + CONF_GPMC_A5) = (MUX_GPIO<<0);
@@ -70,7 +70,7 @@ static void GPIO1PinMuxSetup(unsigned int PIN){
  * =====================================================================================
  */
 
-static void GPIODirModeSet(unsigned int PIN){
+void GPIODirModeSet(unsigned int PIN){
 	if(PIN > -1 && PIN < 32)
 		HWREG(SOC_GPIO_1_REGS + GPIO_OE_OFFSET) &= ~(1<<PIN);
 }
@@ -82,7 +82,7 @@ static void GPIODirModeSet(unsigned int PIN){
  * =====================================================================================
  */
 
-static void GPIOWriteMode(unsigned int PIN, unsigned int OUTPUT){
+void GPIOWriteMode(unsigned int PIN, unsigned int OUTPUT){
 
 	switch(PIN){
 		case GPIO1_INSTANCE_PIN_21:
