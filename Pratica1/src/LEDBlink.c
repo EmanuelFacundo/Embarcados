@@ -25,7 +25,7 @@ int flag;
 **                INTERNAL MACRO DEFINITIONS
 *****************************************************************************/
 
-#define TOGGLE 			(0X01u)
+#define TOGGLE 			(0x01u)
 #define TRUE			(1)
 #define PIN_BASE		(21)
 
@@ -33,8 +33,8 @@ int flag;
 **                INTERNAL FUNCTION PROTOTYPES
 *****************************************************************************/
 
-static void delay(unsigned int TIME);
-static void toggle(unsigned int PIN);
+void delay(unsigned int TIME);
+void toggle(unsigned int PIN);
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -48,15 +48,21 @@ int _main(){
 	volatile unsigned int pin_control = 0x0;
 
 	/* Ativando clocks funcionais para a instância GPIO1. */
+	//HWREG(SOC_PRCM_REGS + CM_PER_GPIO1_CLKCTRL) = (ENABLE_CM_PER_GPIO1_CLKCTRL<<0) | (1<<OPTFCLKEN_GPIO_1_GDBCLK);
 	GPIO1ModuleClkConfig();
 
-	/* Selionando pin GPIO[21] para o uso. */
+
+	/* Selionando pin GPIO para o uso. */
+	//HWREG(GPIO_INSTANCE_ADDRESS + CONF_GPMC_A5) = (MUX_GPIO<<0);
 	GPIO1PinMuxSetup(GPIO1_INSTANCE_PIN_21);
 	GPIO1PinMuxSetup(GPIO1_INSTANCE_PIN_22);
 	GPIO1PinMuxSetup(GPIO1_INSTANCE_PIN_23);
 	GPIO1PinMuxSetup(GPIO1_INSTANCE_PIN_24);
+	
+
 
 	/* Setando o pin GPIO como pino de saida. */
+	//HWREG(SOC_GPIO_1_REGS + GPIO_OE_OFFSET) &= ~(1<<GPIO1_INSTANCE_PIN_21);
 	GPIODirModeSet(GPIO1_INSTANCE_PIN_21);
 	GPIODirModeSet(GPIO1_INSTANCE_PIN_22);
 	GPIODirModeSet(GPIO1_INSTANCE_PIN_23);
@@ -65,16 +71,17 @@ int _main(){
 	while(TRUE){
 
 		toggle(PIN_BASE + pin_control);
-		delay(50000);
+		delay(300000);
 		toggle(PIN_BASE + pin_control);
-		delay(50000);
+		//delay(50000);
 
 		pin_control = ((pin_control+1) % 4);
+		
 
 	}
 
-	/* Acender o LED */
-	//HWREG(SOC_GPIO_1_REGS + GPIO_SETDATAOUT) = (1<<GPIO1_INSTANCE_PIN_NUMBER);
+	/* Acender o LED. */
+	//HWREG(SOC_GPIO_1_REGS + GPIO_SETDATAOUT) |= (1<<GPIO1_INSTANCE_PIN_21);
 
 	/* Apagar o LED. */
 	//HWREG(SOC_GPIO_1_REGS + GPIO_CLEARDATAOUT) |= (1<<GPIO1_INSTANCE_PIN_NUMBER);
@@ -88,7 +95,6 @@ int _main(){
  *  Description:  
  * =====================================================================================
  */
-
 void toggle(unsigned int PIN){
 	flag ^= TOGGLE;
 
@@ -144,8 +150,7 @@ void toggle(unsigned int PIN){
  *  Description:  
  * =====================================================================================
  */
-
 void delay(unsigned int TIME){
 	volatile unsigned int ra;
-	for(ra = 0; ra < TIME; ra ++);
+	for(ra = 0; ra < TIME;ra++);
 }
