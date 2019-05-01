@@ -16,11 +16,11 @@ typedef enum GPIO_Pin GPIO_Pin_t;
 
 void GPIO1ModuleClkConfig();
 
-void GPIO1PinMuxSetup(unsigned int PIN);
+void GPIO1PinMuxSetup(unsigned int uPin);
 
-void GPIODirModeSet(GPIO_Pin_t PIN);
+void GPIODirModeSet(GPIO_Pin_t pin);
 
-void GPIOWriteMode(unsigned int PIN, unsigned int OUTPUT);
+void GPIOWriteMode(unsigned int uPin, unsigned int uValue);
 
 
 

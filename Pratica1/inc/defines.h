@@ -9,6 +9,7 @@
 #define GPIO1_INSTANCE_PIN_22			(22)
 #define GPIO1_INSTANCE_PIN_23			(23)
 #define GPIO1_INSTANCE_PIN_24			(24)
+#define GPIO1_INSTANCE_PIN_28			(28)
 #define CONF_GPMC_A5					(0x854)
 #define CONF_GPMC_A6					(0x858)
 #define CONF_GPMC_A7					(0x85C)

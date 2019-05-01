@@ -20,6 +20,7 @@
 #include "defines.h"
 
 int flag;
+char bool = '0';
 
 /*****************************************************************************
 **                INTERNAL MACRO DEFINITIONS
@@ -35,6 +36,7 @@ int flag;
 
 void delay(unsigned int TIME);
 void toggle(unsigned int PIN);
+int left_or_right(unsigned int i);
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -45,7 +47,7 @@ void toggle(unsigned int PIN);
 int _main(){
 
 	flag = 0x0;
-	volatile unsigned int pin_control = 0x0;
+	volatile unsigned int pin_control = 1;
 
 	/* Ativando clocks funcionais para a instância GPIO1. */
 	//HWREG(SOC_PRCM_REGS + CM_PER_GPIO1_CLKCTRL) = (ENABLE_CM_PER_GPIO1_CLKCTRL<<0) | (1<<OPTFCLKEN_GPIO_1_GDBCLK);
@@ -69,13 +71,15 @@ int _main(){
 	GPIODirModeSet(GPIO1_INSTANCE_PIN_24);
 
 	while(TRUE){
+		
+		pin_control = left_or_right(pin_control);
 
 		toggle(PIN_BASE + pin_control);
 		delay(300000);
 		toggle(PIN_BASE + pin_control);
 		//delay(50000);
 
-		pin_control = ((pin_control+1) % 4);
+		//pin_control = ((pin_control+1) % 4);
 		
 
 	}
@@ -95,11 +99,11 @@ int _main(){
  *  Description:  
  * =====================================================================================
  */
-void toggle(unsigned int PIN){
+void toggle(unsigned int uPin){
 	flag ^= TOGGLE;
 
 	if (flag){
-		switch(PIN){
+		switch(uPin){
 			case GPIO1_INSTANCE_PIN_21:
 				GPIOWriteMode(GPIO1_INSTANCE_PIN_21, HIGH);
 				break;
@@ -121,7 +125,7 @@ void toggle(unsigned int PIN){
 		}
 		
 	}else{
-		switch(PIN){
+		switch(uPin){
 			case GPIO1_INSTANCE_PIN_21:
 				GPIOWriteMode(GPIO1_INSTANCE_PIN_21, LOW);
 				break;
@@ -153,4 +157,28 @@ void toggle(unsigned int PIN){
 void delay(unsigned int TIME){
 	volatile unsigned int ra;
 	for(ra = 0; ra < TIME;ra++);
+}
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  left_or_right
+ *  Description:  
+ * =====================================================================================
+ */
+int left_or_right(unsigned int i){
+	if(i == 3 && bool == '1'){
+		bool = '0';
+		return (i-1);
+	}
+	
+	if(i==0 && bool == '0'){
+		bool = '1';
+		return (i+1);
+	}
+
+	if(bool == '0')
+		return (i-1);	
+	else if(bool == '1')
+		return (i+1);
+
 }

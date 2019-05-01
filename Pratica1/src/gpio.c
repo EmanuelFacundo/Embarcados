@@ -39,9 +39,9 @@ void GPIO1ModuleClkConfig(){
  * =====================================================================================
  */
 
-void GPIO1PinMuxSetup(unsigned int PIN){
+void GPIO1PinMuxSetup(unsigned int uPin){
 	
-	switch(PIN){
+	switch(uPin){
 		case GPIO1_INSTANCE_PIN_21:
 			HWREG(GPIO_INSTANCE_ADDRESS + CONF_GPMC_A5) = (MUX_GPIO<<0);
 			break;
@@ -71,8 +71,8 @@ void GPIO1PinMuxSetup(unsigned int PIN){
  * =====================================================================================
  */
 
-void GPIODirModeSet(GPIO_Pin_t PIN){
-		HWREG(SOC_GPIO_1_REGS + GPIO_OE_OFFSET) &= ~(1<<PIN);
+void GPIODirModeSet(GPIO_Pin_t pin){
+		HWREG(SOC_GPIO_1_REGS + GPIO_OE_OFFSET) &= ~(1<<pin);
 }
 
 /* 
@@ -82,32 +82,32 @@ void GPIODirModeSet(GPIO_Pin_t PIN){
  * =====================================================================================
  */
 
-void GPIOWriteMode(unsigned int PIN, unsigned int OUTPUT){
+void GPIOWriteMode(unsigned int uPin, unsigned int uValue){
 
-	switch(PIN){
+	switch(uPin){
 		case GPIO1_INSTANCE_PIN_21:
-			if(OUTPUT)
+			if(uValue)
 				HWREG(SOC_GPIO_1_REGS + GPIO_SETDATAOUT) |= (1<<GPIO1_INSTANCE_PIN_21);
 			else
 				HWREG(SOC_GPIO_1_REGS + GPIO_CLEARDATAOUT) |= (1<<GPIO1_INSTANCE_PIN_21);
 			break;
 
 		case GPIO1_INSTANCE_PIN_22:
-			if(OUTPUT)
+			if(uValue)
 				HWREG(SOC_GPIO_1_REGS + GPIO_SETDATAOUT) |= (1<<GPIO1_INSTANCE_PIN_22);
 			else
 				HWREG(SOC_GPIO_1_REGS + GPIO_CLEARDATAOUT) |= (1<<GPIO1_INSTANCE_PIN_22);
 			break;
 
 		case GPIO1_INSTANCE_PIN_23:
-			if(OUTPUT)
+			if(uValue)
 				HWREG(SOC_GPIO_1_REGS + GPIO_SETDATAOUT) |= (1<<GPIO1_INSTANCE_PIN_23);
 			else
 				HWREG(SOC_GPIO_1_REGS + GPIO_CLEARDATAOUT) |= (1<<GPIO1_INSTANCE_PIN_23);
 			break;
 
 		case GPIO1_INSTANCE_PIN_24:
-			if(OUTPUT)
+			if(uValue)
 				HWREG(SOC_GPIO_1_REGS + GPIO_SETDATAOUT) |= (1<<GPIO1_INSTANCE_PIN_24);
 			else
 				HWREG(SOC_GPIO_1_REGS + GPIO_CLEARDATAOUT) |= (1<<GPIO1_INSTANCE_PIN_24);
