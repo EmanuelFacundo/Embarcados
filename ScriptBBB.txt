@@ -4,5 +4,7 @@ run app						^ip da placa				^ip do pc							^troca isso aqui se o nome do arqui
 
 
 esse desativa o cachorro
-set app "mw 0x44E35048 0xaaaa; sleep; mw 0x44E35048 0x5555;setenv serverip 192.168.0.1;setenv ipaddr 192.168.0.2;tftp 0x80000000 /tftpboot/LEDBlink_and_Buton.bin;go 0x80000000;"
-run app																^ip do pc					^ip do placa								^troca isso aqui se o nome do arquivo for diferente.
+set app "mw 0x44E35048 0xaaaa; sleep; mw 0x44E35048 0x5555;setenv serverip 192.168.0.1;setenv ipaddr 192.168.0.2;tftp 0x80000000 /tftpboot/appGpio.bin;go 0x80000000;"
+run app																^ip do pc					^ip do placa								^troca isso aqui se o nome do arquivo for diferente
+
+mw 0x44E35048 0xaaaa; sleep; mw 0x44E35048 0x5555;setenv serverip 192.168.0.1;setenv ipaddr 192.168.0.2;tftp 0x80000000 /tftpboot/gpioInterrupt.bin;go 0x80000000;
