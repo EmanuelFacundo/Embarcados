@@ -28,10 +28,11 @@
 /******************************************************************************
 **                      INTERNAL VARIABLE DEFINITIONS
 *******************************************************************************/
-static volatile unsigned int flagIsr;
+static volatile unsigned int flagIsr1;
+static volatile unsigned int flagIsr2;
 int flagLR;
 int rightOrLeft;
-
+int pin_control;
 /*****************************************************************************
 **                INTERNAL MACRO DEFINITIONS
 *****************************************************************************/
@@ -39,7 +40,7 @@ int rightOrLeft;
 #define        	PIN_LOW		0
 
 #define TOGGLE          (0x01u)
-#define PIN_BASE        (21)
+#define PIN_BASE        (12)
 
 /* Values denoting the Interrupt Line number to be used. */
 #define GPIO_INTC_LINE_1                  (0x0)
@@ -88,13 +89,6 @@ static void 		gpioIntTypeSet(unsigned int, unsigned int, unsigned int);
 void toggle(unsigned int uPin);
 int left(unsigned int i);
 int right(unsigned int i);
-
-void seq1();
-void seq2();
-void seq3();
-static int			vel = 100;
-static int			seq = 1;
-
  
 /******************************************************************************
 **              FUNCTION DEFINITIONS
@@ -102,60 +96,68 @@ static int			seq = 1;
 int main(){
 
 	rightOrLeft = 0x0;
-    flagIsr = 0x0;
+    flagIsr1 = 0x0;
+    flagIsr2 = 0x0;
     flagLR = 0x0;
     int count;
-    volatile unsigned int pin_control = 1;
+    pin_control = 0;
+    int delay = 500;
 	
 	initSerial();
-    	
+    
+    DMTimer7ModuleClkConfig();
+    DMTimerModeConfigure(SOC_DMTIMER_7_REGS, DMTIMER_ONESHOT_NOCMP_ENABLE);
+
 	/* Enable IRQ in CPSR */
    	IntMasterIRQEnable();
 
    	GPIOModuleClkConfig(1);
-   	GPIOModuleClkConfig(2);
 	
-	for(count = PIN_BASE; count < 25; count++)
+	for(count = PIN_BASE; count < 15; count++) 
         initLed(SOC_GPIO_1_REGS, 1, count);
 
-	initButton(SOC_GPIO_1_REGS, 1, 28);
 	initButton(SOC_GPIO_1_REGS, 1, 16);
+    initButton(SOC_GPIO_1_REGS, 1, 28);
 
-//	GPIOPinWrite(SOC_GPIO_2_REGS,3,1);
-//	GPIOPinWrite(SOC_GPIO_2_REGS,3,1);
-//	GPIOPinWrite(SOC_GPIO_2_REGS,4,1);
-//	GPIOPinWrite(SOC_GPIO_2_REGS,5,1);
 	/* configure gpio interrupt on the INTC */
 
 	// ENABLE PIN TO INTERRUPT   	
 	gpioAintcConf();
 	gpioPinIntConf(SOC_GPIO_1_REGS, GPIO_INTC_LINE_1, 16);
+    gpioPinIntConf(SOC_GPIO_1_REGS, GPIO_INTC_LINE_1, 28);
    	gpioIntTypeSet(SOC_GPIO_1_REGS, 16, GPIO_INTC_TYPE_RISE_EDGE);
+    gpioIntTypeSet(SOC_GPIO_1_REGS, 28, GPIO_INTC_TYPE_RISE_EDGE);
+
+    ConsoleUtilsPrintf("\n<<<< STANDARD DELAY -> %dms >>>>\n", delay);
 
    	while(1){
-		//if(flagIsr){
 
-           // rightOrLeft ^= TOGGLE;
-
-            if (flagIsr)
-            {
-                pin_control = right(pin_control);
+        if (flagIsr1)
+        {
             
-                toggle(PIN_BASE + pin_control);
-                Delay(100);
-                toggle(PIN_BASE + pin_control);
-            }
-            else
-            {
-                pin_control = left(pin_control);
+            pin_control = left(pin_control);
+            
+            toggle(PIN_BASE + pin_control);
+            Delay(delay);
+            toggle(PIN_BASE + pin_control);
 
-                toggle(PIN_BASE + pin_control);
-                Delay(100);
-                toggle(PIN_BASE + pin_control);
-            }
+        }
+        if (flagIsr2)
+        {
+            ConsoleUtilsPrintf("\n<<<< DELAY -> %dms >>>>\n", delay);
+            ConsoleUtilsPrintf("ENTER A NEW DELAY IN mSec: ");
+            ConsoleUtilsScanf("%d", &delay);
+            flagIsr2 = 0;
+        }
+        if(!flagIsr1 && !flagIsr2) 
+        {
+            pin_control = right(pin_control);
+            toggle(PIN_BASE + pin_control);
+            Delay(delay);
+            toggle(PIN_BASE + pin_control);
+        }
 
-        //}
-    	}
+    }
 	
 	ConsoleUtilsPrintf("#####  exit system  #####\n");
 	
@@ -168,44 +170,44 @@ void toggle(unsigned int uPin){
 
     if (flagLR){
         switch(uPin){
-            case 21:
-                GPIOPinWrite(SOC_GPIO_1_REGS, 21,1);
+            case 12:
+                GPIOPinWrite(SOC_GPIO_1_REGS,uPin,1);
                 break;
 
-            case 22:
-                GPIOPinWrite(SOC_GPIO_1_REGS,22,1);
+            case 13:
+                GPIOPinWrite(SOC_GPIO_1_REGS,uPin,1);
                 break;
 
-            case 23:
-                GPIOPinWrite(SOC_GPIO_1_REGS,23,1);
+            case 14:
+                GPIOPinWrite(SOC_GPIO_1_REGS,uPin,1);
                 break;
 
-            case 24:
-                GPIOPinWrite(SOC_GPIO_1_REGS,24,1);
+            /*case 24:
+                GPIOPinWrite(SOC_GPIO_1_REGS,uPin,1);
                 break;
-
+            */
             default:
                 break;  
         }
         
     }else{
         switch(uPin){
-            case 21:
-                GPIOPinWrite(SOC_GPIO_1_REGS,21,0);
+            case 12:
+                GPIOPinWrite(SOC_GPIO_1_REGS,uPin,0);
                 break;
 
-            case 22:
-                GPIOPinWrite(SOC_GPIO_1_REGS,22,0);
+            case 13:
+                GPIOPinWrite(SOC_GPIO_1_REGS,uPin,0);
                 break;
 
-            case 23:
-                GPIOPinWrite(SOC_GPIO_1_REGS,23,1);
+            case 14:
+                GPIOPinWrite(SOC_GPIO_1_REGS,uPin,0);
                 break;
 
-            case 24:
-                GPIOPinWrite(SOC_GPIO_1_REGS,24,1);
+            /*case 24:
+                GPIOPinWrite(SOC_GPIO_1_REGS,uPin,0);
                 break;
-
+            */
             default:
                 break;  
         }
@@ -213,7 +215,7 @@ void toggle(unsigned int uPin){
 }
 
 int left(unsigned int i){
-    if(i == 3){
+    if(i == 2){
         return (0);
     }
     
@@ -222,102 +224,32 @@ int left(unsigned int i){
 
 int right(unsigned int i){ 
     if(i==0){
-        return (3);
+        return (2);
     }
 
     return (i-1);
 }
-void seq1(){
-	GPIOPinWrite(SOC_GPIO_2_REGS,3,1);		
-	Delay(vel);
-	GPIOPinWrite(SOC_GPIO_2_REGS,4,1);
-	Delay(vel);
-	GPIOPinWrite(SOC_GPIO_2_REGS,5,1);
-	Delay(vel);
-	GPIOPinWrite(SOC_GPIO_2_REGS,3,0);		
-	Delay(vel);
-	GPIOPinWrite(SOC_GPIO_2_REGS,4,0);
-	Delay(vel);
-	GPIOPinWrite(SOC_GPIO_2_REGS,5,0);
-	Delay(vel);
-}
-
-void seq2(){
-	GPIOPinWrite(SOC_GPIO_2_REGS,3,1);		
-	GPIOPinWrite(SOC_GPIO_2_REGS,4,1);
-	GPIOPinWrite(SOC_GPIO_2_REGS,5,1);
-	Delay(vel);
-	GPIOPinWrite(SOC_GPIO_2_REGS,3,0);		
-	GPIOPinWrite(SOC_GPIO_2_REGS,4,0);
-	GPIOPinWrite(SOC_GPIO_2_REGS,5,0);
-	Delay(vel);
-}
-
-void seq3(){
-	GPIOPinWrite(SOC_GPIO_2_REGS,3,1);		
-	GPIOPinWrite(SOC_GPIO_2_REGS,5,1);
-	GPIOPinWrite(SOC_GPIO_2_REGS,4,0);
-	Delay(vel);
-	GPIOPinWrite(SOC_GPIO_2_REGS,3,0);		
-	GPIOPinWrite(SOC_GPIO_2_REGS,4,1);
-	GPIOPinWrite(SOC_GPIO_2_REGS,5,0);
-	Delay(vel);
-}
 
 static void Delay(volatile unsigned int mSec){
    while(mSec != 0){
-        DMTimerCounterSet(SOC_DMTIMER_2_REGS, 0);
-        DMTimerEnable(SOC_DMTIMER_2_REGS);
-        while(DMTimerCounterGet(SOC_DMTIMER_2_REGS) < TIMER_1MS_COUNT);
-        DMTimerDisable(SOC_DMTIMER_2_REGS);
+        DMTimerCounterSet(SOC_DMTIMER_7_REGS, 0);
+        DMTimerEnable(SOC_DMTIMER_7_REGS);
+        while(DMTimerCounterGet(SOC_DMTIMER_7_REGS) < TIMER_1MS_COUNT);
+        DMTimerDisable(SOC_DMTIMER_7_REGS);
         mSec--;
     }
 }
-/*FUNCTION*-------------------------------------------------------
-*
-* A function which is used to generate a delay.
-*END*-----------------------------------------------------------*/
-/*static void Delay(unsigned int count){
-    	while(count--);
-}*/
-
-/*FUNCTION*-------------------------------------------------------
-*
-* A function which is used to initialize UART.
-*END*-----------------------------------------------------------*/
-/*static unsigned  int getAddr(unsigned int module){
-	unsigned int addr;
-
-	switch (module) {
-		case GPIO0:
-			addr = SOC_GPIO_0_REGS;	
-			break;
-		case GPIO1:	
-			addr = SOC_GPIO_1_REGS;	
-			break;
-		case GPIO2:	
-			addr = SOC_GPIO_2_REGS;	
-			break;
-		case GPIO3:	
-			addr = SOC_GPIO_3_REGS;	
-			break;
-		default:	
-			break;
-	}* -----  end switch  ----- *
-
-	return(addr);
-}*/
 
 /*FUNCTION*-------------------------------------------------------
 *
 * A function which is used to initialize UART.
 *END*-----------------------------------------------------------*/
 static void initSerial(){
-	/* Initialize console for communication with the Host Machine */
-    	ConsoleUtilsInit();
+    /* Initialize console for communication with the Host Machine */
+    ConsoleUtilsInit();
 
-    	/* Select the console type based on compile time check */
-    	ConsoleUtilsSetType(CONSOLE_UART);
+    /* Select the console type based on compile time check */
+    ConsoleUtilsSetType(CONSOLE_UART);
 }
 
 /*FUNCTION*-------------------------------------------------------
@@ -357,7 +289,7 @@ static void gpioAintcConf(void){
     IntAINTCInit();
  
     /* Registering gpioIsr */
-    IntRegister(SYS_INT_GPIOINT1A, gpioIsr);
+    IntRegister(SYS_INT_GPIOINT1A, gpioIsr); 
     
     /* Set the priority */
     IntPrioritySet(SYS_INT_GPIOINT1A, 0, AINTC_HOSTINT_ROUTE_IRQ);
@@ -374,21 +306,25 @@ static void gpioAintcConf(void){
 * send a character to serial.
 *END*-----------------------------------------------------------*/    
 static void gpioIsr(void) {
-	flagIsr ^= TOGGLE;
 
-    int count;
+    if(GPIOPinIntStatus(SOC_GPIO_1_REGS, GPIO_INTC_LINE_1, 16))
+    {
+        flagIsr1 ^= TOGGLE;
+        ConsoleUtilsPrintf("\n<<<< BUTTON 1 PRESS >>>>\n");
+        GPIOPinIntClear(SOC_GPIO_1_REGS, GPIO_INTC_LINE_1, 16);
+    
+    }
+    if(GPIOPinIntStatus(SOC_GPIO_1_REGS, GPIO_INTC_LINE_1, 28))
+    {
+        flagIsr2 ^= TOGGLE;
+        ConsoleUtilsPrintf("\n<<<< BUTTON 2 PRESS >>>>\n");
+        GPIOPinIntClear(SOC_GPIO_1_REGS, GPIO_INTC_LINE_1, 28);
 
-    for(count = PIN_BASE; count < 25; count++)
-        GPIOPinWrite(SOC_GPIO_1_REGS,count,0);
+    }
 
     	/*	Clear wake interrupt	*/
-	//HWREG(SOC_GPIO_1_REGS + 0x3C) = 0x1000;
-	//HWREG(SOC_GPIO_1_REGS + 0x34) = 0x1000;
-	ConsoleUtilsPrintf("\nAAAAAA\n");
-	//HWREG(SOC_GPIO_1_REGS + 0x2C) = 0x10000;
-	HWREG(SOC_GPIO_1_REGS + 0x2C) = 0xFFFFFFFF;
-	//seq == 3 ? seq = 0 : seq++;
-//	vel += 100;
+
+	
 
 }
 
@@ -442,7 +378,7 @@ static void gpioPinIntEnable(unsigned int baseAdd,
 
 /*FUNCTION*-------------------------------------------------------
 *
-* Function Name : gpioAintcconfigure
+* Function Name : gpioIntTypeSet
 * Comments      : This API configures the event type for a specified 
 * input GPIO pin. Whenever the selected event occurs on that GPIO pin 
 * and if interrupt generation is enabled for that pin, the GPIO module 

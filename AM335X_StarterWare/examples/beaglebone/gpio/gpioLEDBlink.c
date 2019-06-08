@@ -27,7 +27,7 @@ static void resetBoard();
 ** The main function. Application starts here.
 */
 int main(){
-	unsigned int modAddr=SOC_GPIO_1_REGS, mod=GPIO1, pin=21, dir=GPIO_DIR_OUTPUT ;
+	unsigned int modAddr=SOC_GPIO_1_REGS, mod=GPIO1, pin=21, dir=GPIO_DIR_OUTPUT;
     	/* Enabling functional clocks for GPIO instance. */
     	GPIOModuleClkConfig(mod);
     

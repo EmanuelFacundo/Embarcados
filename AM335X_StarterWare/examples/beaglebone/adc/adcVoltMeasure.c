@@ -99,7 +99,7 @@ unsigned int val2;
 /****************************************************************************/
 
 int main(void)
-{
+{   
     SetupIntc();
 
     /* Initialize the UART console */
@@ -112,23 +112,29 @@ int main(void)
 
     while(flag);
 
-    val1 = (sample1 * RESOL_X_MILLION) / 1000;
+    while(1){
+        
+        unsigned int delay = 200000;
 
-    ConsoleUtilsPrintf("Voltage sensed on the AN0 line : ");
+        val1 = (sample1 * RESOL_X_MILLION) / 1000;
 
-    ConsoleUtilsPrintf("%d", val1);
+        ConsoleUtilsPrintf("Voltage sensed on the AN0 line : ");
 
-    ConsoleUtilsPrintf("mV\r\n");
+        ConsoleUtilsPrintf("%d", val1);
 
-    val2 = (sample2 * RESOL_X_MILLION) / 1000;
+        ConsoleUtilsPrintf("mV\r\n");
 
-    ConsoleUtilsPrintf("Voltage sensed on the AN1 line : ");
+        val2 = (sample2 * RESOL_X_MILLION) / 1000;
 
-    ConsoleUtilsPrintf("%d", val2);
+        ConsoleUtilsPrintf("Voltage sensed on the AN1 line : ");
 
-    ConsoleUtilsPrintf("mV\r\n");
+        ConsoleUtilsPrintf("%d", val2);
 
-    while(1);
+        ConsoleUtilsPrintf("mV\r\n");
+
+        while(delay--);
+
+    }
 
 }
 
