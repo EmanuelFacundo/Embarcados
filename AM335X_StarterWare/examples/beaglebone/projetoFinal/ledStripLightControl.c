@@ -147,14 +147,16 @@ int main(){
     /* configure gpio interrupt on the INTC */
     gpioAintcConf();
     gpioPinIntConf(modAddr, GPIO_INTC_LINE_1, BUTTON_PIN);
-    gpioPinIntConf(modAddr, GPIO_INTC_LINE_2, BUTTON2_PIN);
+    gpioPinIntConf(modAddr, GPIO_INTC_LINE_1, BUTTON2_PIN);
     gpioIntTypeSet(modAddr, BUTTON_PIN, GPIO_INTC_TYPE_RISE_EDGE);
     gpioIntTypeSet(modAddr, BUTTON2_PIN, GPIO_INTC_TYPE_RISE_EDGE);
 
 
     ConsoleUtilsPrintf("Configure gpio interrupt on the INTC...\n");
     
-    ConsoleUtilsPrintf("\n\n<<<<  ENABLE SYSTEM  >>>>\n\n");    
+    ConsoleUtilsPrintf("\n\n<<<<  ENABLE SYSTEM  >>>>\n\n");
+
+    ConsoleUtilsPrintf("\n<<<< OPTION %s >>>>\n", seq[flagIsrB1]); 
 
     while(1)
     {
@@ -298,15 +300,15 @@ static void gpioIsr(void) {
         GPIOPinIntClear(SOC_GPIO_1_REGS, GPIO_INTC_LINE_1, BUTTON_PIN);
     }
 
-    if(GPIOPinIntStatus(SOC_GPIO_1_REGS, GPIO_INT_LINE_2, BUTTON2_PIN))
+    if(GPIOPinIntStatus(SOC_GPIO_1_REGS, GPIO_INT_LINE_1, BUTTON2_PIN))
     {
         flagIsrB2 ^= TOGGLE;
         ConsoleUtilsPrintf("\n<<<< BUTTON2 PRESS >>>>\n");
         /* Clear wake interrupt  */ 
-        GPIOPinIntClear(SOC_GPIO_1_REGS, GPIO_INT_LINE_2, BUTTON2_PIN);
+        GPIOPinIntClear(SOC_GPIO_1_REGS, GPIO_INT_LINE_1, BUTTON2_PIN);
     }
-
-    ConsoleUtilsPrintf("<<<< %s >>>>", seq[flagIsrB1]);
+    
+    ConsoleUtilsPrintf("\n<<<< OPTION %s >>>>\n", seq[flagIsrB1]);
 
 }
 
