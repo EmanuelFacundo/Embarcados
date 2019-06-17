@@ -23,6 +23,7 @@
 #include "gpio_v2.h"
 #include "consoleUtils.h"
 #include "dmtimer.h"
+#include "tsc_adc.h"
 
 /******************************************************************************
 **                      INTERNAL VARIABLE DEFINITIONS
@@ -30,6 +31,7 @@
 static volatile unsigned int flagIsrB1;
 static volatile unsigned int flagtoggle;
 static volatile unsigned int flagIsrB2;
+static volatile unsigned int val1;
 
 static const char *seq[] = {
     "RED",
@@ -44,6 +46,7 @@ static const char *seq[] = {
 /*****************************************************************************
 **                INTERNAL MACRO DEFINITIONS
 *****************************************************************************/
+#define RESOL_X_MILLION            (439u)
 #define	PIN_HIGH   		(1)
 #define PIN_LOW			(0)
 #define TOGGLE          (0x01u)
@@ -95,6 +98,8 @@ static void 	initButton(unsigned int, unsigned int, unsigned int);
 static void		gpioAintcConf(void);
 static void 	gpioPinIntConf(unsigned int, unsigned int, unsigned int);
 static void 	gpioIntTypeSet(unsigned int, unsigned int, unsigned int);
+static void     ADCConfigure(void);
+static void     StepConfigure(unsigned int, unsigned int, unsigned int);
 /*****************************************************************************
 **                INTERNAL FUNCTION DEFINITIONS
 *****************************************************************************/
@@ -106,6 +111,7 @@ int main(){
 	flagIsrB1               = 0x0;
     flagIsrB2               = 0x0;
 	flagtoggle              = 0x0;
+    val1                    = 0x0;
 
 	unsigned int modAddr 	= SOC_GPIO_1_REGS;
 	unsigned int mod 		= GPIO1;
@@ -115,6 +121,7 @@ int main(){
     unsigned int fade       = 0; 
     
     initSerial();
+    ADCConfigure();
     
     ConsoleUtilsPrintf("\n\nConsoleUtilsInit OK...\n");
 
@@ -251,6 +258,18 @@ int main(){
 
     		case 6: //MUSIC
 
+                for(count = pin; count < 15 ;count++)
+                {   
+                    val1 = TSCADCFIFOADCDataRead(SOC_ADC_TSC_0_REGS, TSCADC_FIFO_0);
+                    val1 = (val1 * RESOL_X_MILLION) / 1000;
+                    
+                    togle(modAddr, count);
+                    Delay(val1%500);
+                    togle(modAddr,count);
+                    //ConsoleUtilsPrintf("%d %d\n", val1%500, val1%700);
+                }
+
+
     			break;
 
     		default:
@@ -295,21 +314,26 @@ static void gpioIsr(void) {
     if(GPIOPinIntStatus(SOC_GPIO_1_REGS, GPIO_INTC_LINE_1, BUTTON_PIN))
     {
         flagIsrB1 = (flagIsrB1 + 1) % 7;
-        ConsoleUtilsPrintf("\n<<<< BUTTON1 PRESS >>>>\n");
+        //ConsoleUtilsPrintf("\n<<<< BUTTON1 PRESS >>>>\n");
         /*	Clear wake interrupt	*/
         GPIOPinIntClear(SOC_GPIO_1_REGS, GPIO_INTC_LINE_1, BUTTON_PIN);
+
+        ConsoleUtilsPrintf("\n<<<< OPTION %s >>>>\n", seq[flagIsrB1]);
     }
 
     if(GPIOPinIntStatus(SOC_GPIO_1_REGS, GPIO_INT_LINE_1, BUTTON2_PIN))
     {
         flagIsrB2 ^= TOGGLE;
-        ConsoleUtilsPrintf("\n<<<< BUTTON2 PRESS >>>>\n");
+        //ConsoleUtilsPrintf("\n<<<< BUTTON2 PRESS >>>>\n");
         /* Clear wake interrupt  */ 
         GPIOPinIntClear(SOC_GPIO_1_REGS, GPIO_INT_LINE_1, BUTTON2_PIN);
+        
+        if(flagIsrB2)
+            ConsoleUtilsPrintf("\n<<<< OPTION BLINK ON >>>>\n");
+        else
+            ConsoleUtilsPrintf("\n<<<< OPTION BLINK OFF >>>>\n");
     }
     
-    ConsoleUtilsPrintf("\n<<<< OPTION %s >>>>\n", seq[flagIsrB1]);
-
 }
 
 static void Delay(volatile unsigned int mSec){
@@ -583,6 +607,56 @@ static void gpioIntTypeSet(unsigned int baseAdd,
         default:
         break;
     }
+}
+
+void ADCConfigure(void) {
+    /* Enable the clock for touch screen */
+        TSCADCModuleClkConfig();
+
+        TSCADCPinMuxSetUp();
+
+        /* Configures ADC to 3Mhz */
+        TSCADCConfigureAFEClock(SOC_ADC_TSC_0_REGS, 24000000, 3000000);
+
+        /* Enable Transistor bias */
+        TSCADCTSTransistorConfig(SOC_ADC_TSC_0_REGS, TSCADC_TRANSISTOR_ENABLE);
+
+        TSCADCStepIDTagConfig(SOC_ADC_TSC_0_REGS, 1);
+
+        /* Disable Write Protection of Step Configuration regs*/
+        TSCADCStepConfigProtectionDisable(SOC_ADC_TSC_0_REGS);
+
+        /* Configure step 1 for channel 1(AN0)*/
+        StepConfigure(0, TSCADC_FIFO_0, TSCADC_POSITIVE_INP_CHANNEL1);
+
+        /* General purpose inputs */
+        TSCADCTSModeConfig(SOC_ADC_TSC_0_REGS, TSCADC_GENERAL_PURPOSE_MODE);
+
+        /* Enable step 1 */
+        TSCADCConfigureStepEnable(SOC_ADC_TSC_0_REGS, 1, 1);
+
+        /* Enable the TSC_ADC_SS module*/
+        TSCADCModuleStateSet(SOC_ADC_TSC_0_REGS, TSCADC_MODULE_ENABLE);
+}
+
+
+/* Configures the step */
+void StepConfigure(unsigned int stepSel, unsigned int fifo,
+                   unsigned int positiveInpChannel){
+        /* Configure ADC to Single ended operation mode */
+        TSCADCTSStepOperationModeControl(SOC_ADC_TSC_0_REGS,
+                                  TSCADC_SINGLE_ENDED_OPER_MODE , stepSel);
+
+        /* Configure step to select Channel, refernce voltages */
+        TSCADCTSStepConfig(SOC_ADC_TSC_0_REGS, stepSel, TSCADC_NEGATIVE_REF_VSSA,
+                    positiveInpChannel, TSCADC_NEGATIVE_INP_CHANNEL1, TSCADC_POSITIVE_REF_VDDA);
+
+
+        /* select fifo 0 or 1*/
+        TSCADCTSStepFIFOSelConfig(SOC_ADC_TSC_0_REGS, stepSel, fifo);
+
+        /* Configure ADC to one short mode */
+        TSCADCTSStepModeConfig(SOC_ADC_TSC_0_REGS, stepSel, TSCADC_CONTINIOUS_SOFTWARE_ENABLED);
 }
 
 /******************************* End of file *********************************/

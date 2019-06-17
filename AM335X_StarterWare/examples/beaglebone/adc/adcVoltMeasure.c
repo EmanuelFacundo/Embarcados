@@ -80,10 +80,8 @@
 /******************************************************************************
 **              INTERNAL FUNCTION PROTOTYPES
 ******************************************************************************/
-static void ADCIsr();
-static void SetupIntc(void);
+
 static void ADCConfigure(void);
-static void CleanUpInterrupts(void);
 static void StepConfigure(unsigned int, unsigned int, unsigned int);
 /******************************************************************************
 **              GLOBAL VARIABLE DEFINITIONS
@@ -100,24 +98,30 @@ unsigned int val2;
 
 int main(void)
 {   
-    SetupIntc();
+    sample1 = 0x0;
+    sample2 = 0x0;
+    val1 = 0x0;
+    val2 = 0x0;
+
+    int cont = 0;
 
     /* Initialize the UART console */
     ConsoleUtilsInit();
 
     /* Select the console type based on compile time check */
     ConsoleUtilsSetType(CONSOLE_UART);
-
+    ConsoleUtilsPrintf("b");
     ADCConfigure();
+    ConsoleUtilsPrintf("a");
 
-    while(flag);
         
+    while(1){
+    val1 = TSCADCFIFOADCDataRead(SOC_ADC_TSC_0_REGS, TSCADC_FIFO_0);
 
-    val1 = (sample1 * RESOL_X_MILLION) / 1000;
-
+    val1 = (val1 * RESOL_X_MILLION) / 1000;
     ConsoleUtilsPrintf("Voltage sensed on the AN0 line : ");
 
-    ConsoleUtilsPrintf("%d", sample1);
+    ConsoleUtilsPrintf("%d", val1);
 
     ConsoleUtilsPrintf("mV\r\n");
 
@@ -129,121 +133,69 @@ int main(void)
 
     ConsoleUtilsPrintf("mV\r\n");
 
+    for(cont = 500000; cont > 0 ;cont--);
+    }
+
 
 }
 
-/* ADC is configured */
-static void ADCConfigure(void)
-{
+
+void ADCConfigure(void) {
     /* Enable the clock for touch screen */
-    TSCADCModuleClkConfig();
+        TSCADCModuleClkConfig();
 
-    TSCADCPinMuxSetUp();
+        TSCADCPinMuxSetUp();
 
-    /* Configures ADC to 3Mhz */
-    TSCADCConfigureAFEClock(SOC_ADC_TSC_0_REGS, 24000000, 3000000);
+        /* Configures ADC to 3Mhz */
+        TSCADCConfigureAFEClock(SOC_ADC_TSC_0_REGS, 24000000, 3000000);
 
-    /* Enable Transistor bias */
-    TSCADCTSTransistorConfig(SOC_ADC_TSC_0_REGS, TSCADC_TRANSISTOR_ENABLE);
+        /* Enable Transistor bias */
+        TSCADCTSTransistorConfig(SOC_ADC_TSC_0_REGS, TSCADC_TRANSISTOR_ENABLE);
 
-    TSCADCStepIDTagConfig(SOC_ADC_TSC_0_REGS, 1);
+        TSCADCStepIDTagConfig(SOC_ADC_TSC_0_REGS, 1);
 
-    /* Disable Write Protection of Step Configuration regs*/
-    TSCADCStepConfigProtectionDisable(SOC_ADC_TSC_0_REGS);
+        /* Disable Write Protection of Step Configuration regs*/
+        TSCADCStepConfigProtectionDisable(SOC_ADC_TSC_0_REGS);
 
-    /* Configure step 1 for channel 1(AN0)*/
-    StepConfigure(0, TSCADC_FIFO_0, TSCADC_POSITIVE_INP_CHANNEL1);
+        /* Configure step 1 for channel 1(AN0)*/
+        StepConfigure(0, TSCADC_FIFO_0, TSCADC_POSITIVE_INP_CHANNEL1);
 
-    /* Configure step 2 for channel 2(AN1)*/
-    StepConfigure(1, TSCADC_FIFO_1, TSCADC_POSITIVE_INP_CHANNEL2);
+        /* General purpose inputs */
+        TSCADCTSModeConfig(SOC_ADC_TSC_0_REGS, TSCADC_GENERAL_PURPOSE_MODE);
 
-    /* General purpose inputs */
-    TSCADCTSModeConfig(SOC_ADC_TSC_0_REGS, TSCADC_GENERAL_PURPOSE_MODE);
+        /* Enable step 1 */
+        TSCADCConfigureStepEnable(SOC_ADC_TSC_0_REGS, 1, 1);
 
-    /* Enable step 1 */
-    TSCADCConfigureStepEnable(SOC_ADC_TSC_0_REGS, 1, 1);
-
-    /* Enable step 2 */
-    TSCADCConfigureStepEnable(SOC_ADC_TSC_0_REGS, 2, 1);
-
-    /* Clear the status of all interrupts */
-    CleanUpInterrupts();
-
-    /* End of sequence interrupt is enable */
-    TSCADCEventInterruptEnable(SOC_ADC_TSC_0_REGS, TSCADC_END_OF_SEQUENCE_INT);
-
-    /* Enable the TSC_ADC_SS module*/
-    TSCADCModuleStateSet(SOC_ADC_TSC_0_REGS, TSCADC_MODULE_ENABLE);
+        /* Enable the TSC_ADC_SS module*/
+        TSCADCModuleStateSet(SOC_ADC_TSC_0_REGS, TSCADC_MODULE_ENABLE);
 }
+
 
 /* Configures the step */
 void StepConfigure(unsigned int stepSel, unsigned int fifo,
-                   unsigned int positiveInpChannel)
-{
-    /* Configure ADC to Single ended operation mode */
-    TSCADCTSStepOperationModeControl(SOC_ADC_TSC_0_REGS,
-                                  TSCADC_SINGLE_ENDED_OPER_MODE, stepSel);
+                   unsigned int positiveInpChannel){
+        /* Configure ADC to Single ended operation mode */
+        TSCADCTSStepOperationModeControl(SOC_ADC_TSC_0_REGS,
+                                  TSCADC_SINGLE_ENDED_OPER_MODE , stepSel);
 
-    /* Configure step to select Channel, refernce voltages */
-    TSCADCTSStepConfig(SOC_ADC_TSC_0_REGS, stepSel, TSCADC_NEGATIVE_REF_VSSA,
+        /* Configure step to select Channel, refernce voltages */
+        TSCADCTSStepConfig(SOC_ADC_TSC_0_REGS, stepSel, TSCADC_NEGATIVE_REF_VSSA,
                     positiveInpChannel, TSCADC_NEGATIVE_INP_CHANNEL1, TSCADC_POSITIVE_REF_VDDA);
 
-    /* XPPSW Pin is on, Which pull up the AN0 line*/
-    TSCADCTSStepAnalogSupplyConfig(SOC_ADC_TSC_0_REGS, TSCADC_XPPSW_PIN_ON, TSCADC_XNPSW_PIN_OFF,
-                                TSCADC_YPPSW_PIN_OFF, stepSel);
+        /* XPPSW Pin is on, Which pull up the AN0 line*/
+        //TSCADCTSStepAnalogSupplyConfig(SOC_ADC_TSC_0_REGS, TSCADC_XPPSW_PIN_ON, TSCADC_XNPSW_PIN_OFF,
+        //                        TSCADC_YPPSW_PIN_OFF, stepSel);
 
-    /* XNNSW Pin is on, Which pull down the AN1 line*/
-    TSCADCTSStepAnalogGroundConfig(SOC_ADC_TSC_0_REGS, TSCADC_XNNSW_PIN_ON, TSCADC_YPNSW_PIN_OFF,
-                                TSCADC_YNNSW_PIN_OFF,  TSCADC_WPNSW_PIN_OFF, stepSel);
+        /* XNNSW Pin is on, Which pull down the AN1 line*/
+        //TSCADCTSStepAnalogGroundConfig(SOC_ADC_TSC_0_REGS, TSCADC_XNNSW_PIN_ON, TSCADC_YPNSW_PIN_OFF,
+        //                        TSCADC_YNNSW_PIN_OFF,  TSCADC_WPNSW_PIN_OFF, stepSel);
 
-    /* select fifo 0 or 1*/
-    TSCADCTSStepFIFOSelConfig(SOC_ADC_TSC_0_REGS, stepSel, fifo);
+        /* select fifo 0 or 1*/
+        TSCADCTSStepFIFOSelConfig(SOC_ADC_TSC_0_REGS, stepSel, fifo);
 
-    /* Configure ADC to one short mode */
-    TSCADCTSStepModeConfig(SOC_ADC_TSC_0_REGS, stepSel,  TSCADC_ONE_SHOT_SOFTWARE_ENABLED);
+        /* Configure ADC to one short mode */
+        TSCADCTSStepModeConfig(SOC_ADC_TSC_0_REGS, stepSel, TSCADC_CONTINIOUS_SOFTWARE_ENABLED);
 }
 
-/* Clear status of all interrupts */
-static void CleanUpInterrupts(void)
-{
-    TSCADCIntStatusClear(SOC_ADC_TSC_0_REGS, 0x7FF);
-    TSCADCIntStatusClear(SOC_ADC_TSC_0_REGS ,0x7FF);
-    TSCADCIntStatusClear(SOC_ADC_TSC_0_REGS, 0x7FF);
-}
 
-/* Reads the data from FIFO 0 and FIFO 1 */
-static void ADCIsr()
-{
-    volatile unsigned int status;
-
-    status = TSCADCIntStatus(SOC_ADC_TSC_0_REGS);
-
-    TSCADCIntStatusClear(SOC_ADC_TSC_0_REGS, status);
-
-    if(status & TSCADC_END_OF_SEQUENCE_INT)
-    {
-         /* Read data from fifo 0 */
-         sample1 = TSCADCFIFOADCDataRead(SOC_ADC_TSC_0_REGS, TSCADC_FIFO_0);
-
-         /* Read data from fif 1*/
-         sample2 = TSCADCFIFOADCDataRead(SOC_ADC_TSC_0_REGS, TSCADC_FIFO_1);
-
-         flag = 0;
-    }
-}
-
-static void SetupIntc(void)
-{
-    /* Enable IRQ in CPSR.*/
-    IntMasterIRQEnable();
-
-    /* Initialize the ARM Interrupt Controller.*/
-    IntAINTCInit();
-
-    IntRegister(SYS_INT_ADC_TSC_GENINT, ADCIsr);
-
-    IntPrioritySet(SYS_INT_ADC_TSC_GENINT, 0, AINTC_HOSTINT_ROUTE_IRQ);
-
-    IntSystemEnable(SYS_INT_ADC_TSC_GENINT);
-}
 
